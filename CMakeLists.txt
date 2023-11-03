@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 3.17)
+
+project(dauntless)
+
+include(GNUInstallDirs)
+
+add_subdirectory(lib)
+add_subdirectory(src)
+add_subdirectory(test)
+
+install(FILES conf/dauntless.ini DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}/dauntless")
