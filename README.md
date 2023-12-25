@@ -6,6 +6,8 @@
 
 ## 编译&安装
 
+编译：
+
 ``` bash
 git clone https://github.com/WMWYT/dauntless.git
 cd dauntless
@@ -13,6 +15,11 @@ mkdir build
 cd build
 cmake ..
 make
+```
+
+安装：
+
+``` bash
 sudo make install
 ```
 
@@ -33,6 +40,6 @@ dauntless
 ## TODO
 
 * OpenSSL
-* 完善control
+* 完善开发开发功能
 * 添加线程
 * 打包

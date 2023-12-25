@@ -36,7 +36,7 @@ int event_handle(int * packet_len, char * buff, int fd){
     if(mqtt_packet->connect->connect_header.control_packet_1 == CONNECT){
         printf("packet connect\n");
         int error_code = mqtt_packet->connect->error_code;
-
+        
         if(config.is_anonymously && error_code == CONNECT_ACCEPTED){
             error_code = control_connect(mqtt_packet->connect);
         }
@@ -94,7 +94,7 @@ int event_handle(int * packet_len, char * buff, int fd){
 
             return 0;
         }else{
-            send(fd, mqtt_connack_encode(0, error_code), 4, 0);
+            send(fd, mqtt_connack_encode(0, CONNECT_ERROR_AUTHORIZED), 4, 0);
         }
 
         return -1;

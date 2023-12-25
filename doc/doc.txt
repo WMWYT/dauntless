@@ -1,0 +1,27 @@
+1.broker_control_info
+void broker_control_info(char * control_type);
+参数
+    control_type：控制类型
+返回值：无
+
+初始化控制库，将控制库的名称赋值给control_type
+
+2.broker_control_strat
+int broker_control_strat(void);
+参数：无
+返回值
+    小于0：失败
+    等于0：成功
+
+控制库开始函数，用于注册控制库控制函数
+
+3.control_register
+int control_register(int (*call_back)(void *), int packet_type);
+参数
+    call_back：控制回调函数
+    packet_type：控制种类
+返回值
+    小于0：失败
+    等于0：成功
+
+注册函数控制库

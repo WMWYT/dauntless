@@ -5,8 +5,7 @@
 #include "dauntless.h"
 
 void * control_lib;
-struct system_info * system_info;
-int (*broker_control_strat)();
+int (*broker_control_strat_call_back)();
 static int (*connect_call_back)(void *);
 static int (*subscribe_call_back)(void *);
 
@@ -45,7 +44,7 @@ int control_init(const char * dl_dir, char * type){
 
     (void) dlerror();
 
-    *(int **) (&broker_control_strat) = (int *)dlsym(control_lib, "broker_control_strat");
+    *(int **) (&broker_control_strat_call_back) = (int *)dlsym(control_lib, "broker_control_strat");
 
     error = dlerror();
     if(error != NULL){
@@ -53,11 +52,11 @@ int control_init(const char * dl_dir, char * type){
         return -1;
     }
 
-    return broker_control_strat();
+    return broker_control_strat_call_back();
 }
 
 int control_destroyed(){
-    if(broker_control_strat) free(broker_control_strat);
+    if(broker_control_strat_call_back) free(broker_control_strat_call_back);
     if(connect_call_back) free(connect_call_back);
     if(subscribe_call_back) free(subscribe_call_back);
     
@@ -79,15 +78,11 @@ int control_register(int (*call_back)(void *), int type){//TODO 将其他包传�
     return 0;
 }
 
-void session_info_delete(){
-    if(system_info) free(system_info);
-}
-
 int control_connect(struct connect_packet * connect){
     if(connect_call_back != NULL)
         return connect_call_back(connect);
     else
-        return 0;
+        return -1;
 }
 
 int * control_subscribe(struct subscribe_packet * subscribe){
