@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mqtt_encode.h"
-#include "mqtt.h"
+#include "dauntless_mqtt.h"
 #include "log.h"
 
 void ML_encode(int x, unsigned char * MSB, unsigned char * LSB){

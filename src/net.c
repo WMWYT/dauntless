@@ -34,7 +34,7 @@ void client_close(int fd){
 }
 
 void close_socker(){
-    control_destroyed();
+    dauntless_plugin_destroyed();
     session_delete_all();
     session_topic_delete_all();
     if(mqtt_packet) free(mqtt_packet);
@@ -74,7 +74,7 @@ void net_start(){
     server_addr.sin_port = htons(config.port);
 
     if(config.is_anonymously)
-        if(control_init(config.dir, config.control_type) < 0){
+        if(dauntless_plugin_init(config.dir, config.control_type) < 0){
             error_exit("control error");
         }
 

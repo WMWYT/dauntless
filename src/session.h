@@ -1,7 +1,7 @@
 #ifndef SESSION_H
 #define SESSION_H
 
-#include "mqtt.h"
+#include "dauntless_mqtt.h"
 #include "utarray.h"
 #include "uthash.h"
 #include "utlist.h"

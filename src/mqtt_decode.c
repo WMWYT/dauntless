@@ -3,7 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include "mqtt_decode.h"
-#include "mqtt.h"
+#include "dauntless_mqtt.h"
 #include "log.h"
 
 int string_len(unsigned char * buff){

@@ -12,7 +12,7 @@
 #include "log.h"
 #include "mqtt_decode.h"
 #include "mqtt_encode.h"
-#include "mqtt.h"
+#include "dauntless_mqtt.h"
 
 union mqtt_packet * mqtt_packet;
 extern struct session * session_sock;
@@ -38,7 +38,7 @@ int event_handle(int * packet_len, char * buff, int fd){
         int error_code = mqtt_packet->connect->error_code;
         
         if(config.is_anonymously && error_code == CONNECT_ACCEPTED){
-            error_code = control_connect(mqtt_packet->connect);
+            error_code = dauntless_plugin_connect_handle(mqtt_packet->connect);
         }
 
         if(error_code == CONNECT_ACCEPTED){
@@ -187,12 +187,12 @@ int event_handle(int * packet_len, char * buff, int fd){
         printf("packet subscribe\n");
         int * return_code = NULL;
 
-        if(config.is_anonymously){
-            return_code = control_subscribe(mqtt_packet->subscribe);
-            for(int i = 0; i < mqtt_packet->subscribe->topic_size; i++){
-                printf("subscribe code: %d\n", return_code[i]);
-            }
-        }
+        // if(config.is_anonymously){
+        //     return_code = control_subscribe(mqtt_packet->subscribe);
+        //     for(int i = 0; i < mqtt_packet->subscribe->topic_size; i++){
+        //         printf("subscribe code: %d\n", return_code[i]);
+        //     }
+        // }
 
         write(fd, mqtt_suback_encode(mqtt_packet->subscribe->variable_header.identifier_MSB, \
                                     mqtt_packet->subscribe->variable_header.identifier_LSB, \

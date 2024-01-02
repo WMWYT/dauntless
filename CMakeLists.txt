@@ -5,10 +5,10 @@ project(dauntless)
 include(GNUInstallDirs)
 
 add_subdirectory(include)
-add_subdirectory(lib)
+# add_subdirectory(lib)
 add_subdirectory(src)
 add_subdirectory(test)
 
-add_subdirectory(demo)
+add_subdirectory(plugin)
 
 install(FILES conf/dauntless.ini DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}/dauntless")
