@@ -1,6 +1,6 @@
 #ifndef EVENT_H
 #define EVENT_H
-#include "net.h"
+#include "service.h"
 #include "config.h"
 
 extern int server_sock, client_sock;

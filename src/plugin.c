@@ -8,8 +8,10 @@ void * handle;
 dauntless_plugin_struct * dauntless_plugin;
 
 int dauntless_plugin_destroyed(){
-    
-    return dlclose(handle);
+    if(handle)
+        return dlclose(handle);
+    else
+        return 0;
 }
 
 int dauntless_plugin_init(char * plugin_lib_dir, char * type)

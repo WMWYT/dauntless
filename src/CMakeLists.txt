@@ -6,6 +6,8 @@ include_directories(${dauntless_SOURCE_DIR}
 
 file(GLOB D_SOURCES *.c)
 
+find_package(OpenSSL REQUIRED)
+
 set(LIB_SRC 
     ../3rd/iniparser/iniparser.c
     ../3rd/iniparser/dictionary.c

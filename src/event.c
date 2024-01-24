@@ -8,7 +8,6 @@
 #include "filtering.h"
 #include "event.h"
 #include "session.h"
-#include "dauntless.h"
 #include "log.h"
 #include "mqtt_decode.h"
 #include "mqtt_encode.h"

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <signal.h>
-#include "net.h"
+#include "service.h"
 #include "session.h"
 #include "config.h"
 
@@ -35,7 +35,7 @@ int main(int argc, char * const argv[])
         switch(opt)
         {
             case 'p':
-                config.port = atoi(optarg);
+                config.port = atoi(optarg );
                 break;
             case 'c':
                 config_file_load(optarg);
@@ -49,7 +49,7 @@ int main(int argc, char * const argv[])
         }
     }
 
-    net_start();
+    service_start();
 
     return 0;
 }

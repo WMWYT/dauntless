@@ -22,6 +22,7 @@ void config_file_load(char * file_dir){
     iniparser_dump(ini, stdout);
 
     config.port = iniparser_getint(ini, "info:port", DEFAULT_PORT);
+    config.tls = iniparser_getboolean(ini, "info:tls", 0);
 
     config.is_anonymously = iniparser_getboolean(ini, "login:anonymously", DEFAULT_IS_ANONYMOUSLY);
 

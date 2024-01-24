@@ -8,6 +8,7 @@
 
 struct config{
     int port;
+    int tls;
     int is_anonymously;
     char control_type[64];
     char dir[256];

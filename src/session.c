@@ -5,7 +5,6 @@
 #include <unistd.h>
 #include "session.h"
 #include "filtering.h"
-#include "dauntless.h"
 #include "mqtt_encode.h"
 
 extern struct RootNode root;
@@ -174,20 +173,24 @@ void session_printf_all(){
 }
 
 void session_delete_all(){
-    struct session *current;
+    struct session *current_1;
+    struct session *current_2;
     struct session *tmp;
 
-    HASH_ITER(hh1, session_sock, current, tmp) {
-        HASH_DELETE(hh1, session_sock, current);
-        if(current)
-            free(current);
+    HASH_ITER(hh1, session_sock, current_1, tmp) {
+        HASH_DELETE(hh1, session_sock, current_1);
+        if(current_1)
+            free(current_1);
     }
 
-    HASH_ITER(hh2, session_client_id, current, tmp){
-        HASH_DELETE(hh2, session_client_id, current);
-        if(current)
-            free(current);
+    HASH_ITER(hh2, session_client_id, current_2, tmp){
+        HASH_DELETE(hh2, session_client_id, current_2);
+        if(current_2)
+            free(current_2);
     }
+
+    current_1 = NULL;
+    current_2 = NULL;
 }
 
 void publish_will_message(struct session * s){
