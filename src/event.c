@@ -18,11 +18,23 @@ extern struct session * session_sock;
 extern struct session * session_client_id;
 extern struct session_publish session_packet_identifier[65536];
 
+void send_infomation(SocketData * data, char * buff, int buff_size)
+{
+    if(config.tls == 0)
+    {
+        write(data->fd, buff, buff_size);
+    }
+    else
+    {
+        SSL_write(data->ssl, buff, buff_size);
+    }
+}
+
 int event_handle(int * packet_len, char * buff, int fd){
     struct session * s;
     struct session_topic * st;
     struct session * session_flag;
-    
+
     HASH_FIND(hh1, session_sock, &fd, sizeof(int), s);
 
     mqtt_packet = mqtt_pack_decode(buff, packet_len);
@@ -31,18 +43,18 @@ int event_handle(int * packet_len, char * buff, int fd){
         if(s) session_close(s);
         return -1; // 小于0 有错误，要断开链接不发送
     }
-    
+
     if(mqtt_packet->connect->connect_header.control_packet_1 == CONNECT){
         printf("packet connect\n");
         int error_code = mqtt_packet->connect->error_code;
-        
+
         if(config.is_anonymously && error_code == CONNECT_ACCEPTED){
             error_code = dauntless_plugin_connect_handle(mqtt_packet->connect);
         }
 
         if(error_code == CONNECT_ACCEPTED){
             session_flag = session_add(fd, mqtt_packet->connect->payload.client_id->string, (mqtt_packet->connect->variable_header.connect_flags >> 1));
-            
+
             if(mqtt_packet->connect->variable_header.connect_flags >> 2 & 1){
                 session_add_will_topic(mqtt_packet->connect->payload.will_topic->string, \
                 ((mqtt_packet->connect->variable_header.connect_flags >> 4 & 1) * 2 + (mqtt_packet->connect->variable_header.connect_flags >> 3 & 1)), \
@@ -117,7 +129,7 @@ int event_handle(int * packet_len, char * buff, int fd){
             while((p = (ChilderNode *) utarray_next(publish_client_id, p))){
                 printf("publish_client_id:%s\n", p->client_id);
                 HASH_FIND(hh2, session_client_id, p->client_id, strlen(p->client_id), s);
-                
+
                 if(qos > p->max_qos){
                     qos = p->max_qos;
                 }
@@ -168,7 +180,7 @@ int event_handle(int * packet_len, char * buff, int fd){
 
     if(mqtt_packet->const_packet->const_header.control_packet_1 == PUBREC){
         printf("pubrec packet\n");
-        
+
         unsigned char buff[2] = {0};
         buff[0] = mqtt_packet->const_packet->variable_header.byte1;
         buff[1] = mqtt_packet->const_packet->variable_header.byte2;

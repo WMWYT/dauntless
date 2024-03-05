@@ -48,8 +48,18 @@ int main(int argc, char * const argv[])
                 break;
         }
     }
-
-    service_start();
+    
+    if (config.is_anonymously)
+        if (dauntless_plugin_init(config.dir, config.control_type) < 0)
+        {
+            printf("plugin init error\n");
+            exit(EXIT_FAILURE);
+        }
+    
+    if(config.tls == 0)
+        service_start();
+    else
+        service_tls_start();
 
     return 0;
 }

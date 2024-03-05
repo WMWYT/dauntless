@@ -6,14 +6,20 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 #include <sys/epoll.h>
+#include "session.h"
+#include "event.h"
 #include "config.h"
 #include "log.h"
+
+int server_sock = 0;
+int epfd = 0;
+
+extern struct session *session_sock;
 
 int service_socket_init(int server_port)
 {
     struct sockaddr_in server_addr;
     socklen_t addr_size;
-    int server_sock;
     int sock = 0;
     int str_len;
 
@@ -39,7 +45,26 @@ int service_socket_init(int server_port)
     return server_sock;
 }
 
-int server_socket_loop(int server_socket, int (* server_handle)(int *, char *, int), int (* server_close)(int))
+void server_socket_ultimately()
+{
+    // dauntless_plugin_destroyed();
+    // session_delete_all();
+    // session_topic_delete_all();
+    // close(server_sock);
+    // close(epfd);
+}
+
+void socket_close(int fd)
+{
+    epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
+    close(fd);
+    printf("close socke %d\n", fd);
+    // session_printf_all();
+    // session_topic_printf_all();
+    printf("-----------------------------------\n");
+}
+
+int server_socket_loop(int server_sock)
 {
     int client_socket = 0;
     struct sockaddr_in client_addr;
@@ -55,8 +80,8 @@ int server_socket_loop(int server_socket, int (* server_handle)(int *, char *, i
     ep_events = malloc(sizeof(struct epoll_event) *EPOLL_SIZE);
 
     event.events = EPOLLIN;
-    event.data.fd = server_socket;
-    epoll_ctl(epfd, EPOLL_CTL_ADD, server_socket, &event);
+    event.data.fd = server_sock;
+    epoll_ctl(epfd, EPOLL_CTL_ADD, server_sock, &event);
 
     while(1)
     {
@@ -71,10 +96,10 @@ int server_socket_loop(int server_socket, int (* server_handle)(int *, char *, i
 
         for(i = 0;i < event_cnt; i++)
         {
-            if(ep_events[i].data.fd == server_socket)
+            if(ep_events[i].data.fd == server_sock)
             {
                 addr_size = sizeof(client_addr);
-                client_socket = accept(server_socket, (struct sockaddr*) &client_addr, &addr_size);
+                client_socket = accept(server_sock, (struct sockaddr*) &client_addr, &addr_size);
                 event.events = EPOLLIN;
                 event.data.fd = client_socket;
                 epoll_ctl(epfd, EPOLL_CTL_ADD, client_socket, &event);
@@ -92,16 +117,31 @@ int server_socket_loop(int server_socket, int (* server_handle)(int *, char *, i
                     {
                         memmove(recv_buffer, buff + packet_len, str_len);
                         printf_buff("recv_buffer", recv_buffer, str_len);
-                        
-                        if(server_handle(&packet_len, recv_buffer, ep_events[i].data.fd) < 0)
+
+                        int retrun_fd = event_handle(&packet_len, recv_buffer, ep_events[i].data.fd);
+
+                        if(retrun_fd < 0)
+                        {
+                            socket_close(ep_events[i].data.fd);
                             break;
-                        
+                        }
+                        else if(retrun_fd > 0)
+                        {
+                            socket_close(retrun_fd);
+                        }
+
                         str_len -= packet_len;
                     }
                 }
                 else
                 {
-                    server_close(ep_events[i].data.fd);
+                    struct session *s = NULL;
+
+                    //TODO 修改好Pound节点下删除时删除不干净的问题
+                    HASH_FIND(hh1, session_sock, &ep_events[i].data.fd, sizeof(int), s);
+                    if (s != NULL)
+                        session_close(s);
+                    socket_close(ep_events[i].data.fd);
                 }
             }
         }
