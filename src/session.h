@@ -1,6 +1,7 @@
 #ifndef SESSION_H
 #define SESSION_H
 
+#include <openssl/ssl.h>
 #include "dauntless_mqtt.h"
 #include "utarray.h"
 #include "uthash.h"
@@ -8,6 +9,11 @@
 
 struct session {
     int sock;
+
+    // tls
+    SSL *ssl;
+    SSL_CTX *ctx;
+
     char client_id[64];
 
     //info
@@ -34,7 +40,7 @@ struct session_publish{
     UT_array * payload;
 };
 
-struct session * session_add(int s_sock, char * s_client_id, int clean_session);
+struct session * session_add(int s_sock, SSL *sock_ssl, SSL_CTX *sock_ctx, char *s_client_id, int clean_session);
 void session_add_will_topic(char * s_will_topic, int qos, struct session *s);
 void session_add_will_payload(char * s_will_payload, struct session * s);
 void session_subscribe_topic(char * s_topic, struct session *s);

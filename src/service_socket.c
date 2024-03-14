@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <sys/epoll.h>
 #include "session.h"
+#include "service.h"
 #include "event.h"
 #include "config.h"
 #include "log.h"
@@ -47,11 +48,11 @@ int service_socket_init(int server_port)
 
 void server_socket_ultimately()
 {
-    // dauntless_plugin_destroyed();
-    // session_delete_all();
-    // session_topic_delete_all();
-    // close(server_sock);
-    // close(epfd);
+    dauntless_plugin_destroyed();
+    session_delete_all();
+    session_topic_delete_all();
+    close(server_sock);
+    close(epfd);
 }
 
 void socket_close(int fd)
@@ -59,9 +60,6 @@ void socket_close(int fd)
     epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
     close(fd);
     printf("close socke %d\n", fd);
-    // session_printf_all();
-    // session_topic_printf_all();
-    printf("-----------------------------------\n");
 }
 
 int server_socket_loop(int server_sock)
@@ -118,7 +116,13 @@ int server_socket_loop(int server_sock)
                         memmove(recv_buffer, buff + packet_len, str_len);
                         printf_buff("recv_buffer", recv_buffer, str_len);
 
-                        int retrun_fd = event_handle(&packet_len, recv_buffer, ep_events[i].data.fd);
+                        SocketData data;
+
+                        data.fd = ep_events[i].data.fd;
+                        data.ssl = NULL;
+                        data.ctx = NULL;
+
+                        int retrun_fd = event_handle(&data, recv_buffer, &packet_len);
 
                         if(retrun_fd < 0)
                         {
@@ -127,7 +131,7 @@ int server_socket_loop(int server_sock)
                         }
                         else if(retrun_fd > 0)
                         {
-                            socket_close(retrun_fd);
+                            socket_close(data.fd);
                         }
 
                         str_len -= packet_len;
@@ -140,7 +144,9 @@ int server_socket_loop(int server_sock)
                     //TODO 修改好Pound节点下删除时删除不干净的问题
                     HASH_FIND(hh1, session_sock, &ep_events[i].data.fd, sizeof(int), s);
                     if (s != NULL)
+                    {
                         session_close(s);
+                    }
                     socket_close(ep_events[i].data.fd);
                 }
             }

@@ -39,6 +39,8 @@ void server_socket_ultimately();
 
 //tls
 void service_tls_start();
+SocketData *service_socket_tls_init(int server_port, const char *public_key_fp, const char *private_key_fp);
+void server_socket_tls_loop(SocketData *server_socket);
 
 int dauntless_plugin_init(char *plugin_lib_dir, char *type);
 int dauntless_plugin_destroyed();

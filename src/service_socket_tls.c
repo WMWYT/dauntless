@@ -6,7 +6,11 @@
 #include <sys/epoll.h>
 #include "config.h"
 #include "service.h"
+#include "session.h"
+#include "event.h"
 #include "log.h"
+
+extern struct session *session_sock;
 
 void socket_tls_close(SocketData **pps)
 {
@@ -113,7 +117,7 @@ SocketData *socket_tls_accept(SocketData* server, ClientData* pclient_data)
     return client;
 }
 
-void service_epoll_tls_loop(SocketData *server_socket, int (* accept_handle)(int *, char *, int), int (* accept_close)(int))
+void server_socket_tls_loop(SocketData *server_socket)
 {
     SocketData *client_socket;
     ClientData infos;
@@ -168,16 +172,33 @@ void service_epoll_tls_loop(SocketData *server_socket, int (* accept_handle)(int
                     {
                         memmove(recv_buffer, buff + packet_len, str_len);
                         printf_buff("recv_buffer", recv_buffer, str_len);
-                        
-                        if(accept_handle(&packet_len, recv_buffer, tmp->fd) < 0)
+
+                        int return_fd = event_handle(tmp , recv_buffer, &packet_len);
+
+                        if(return_fd < 0)
+                        {
+                            socket_tls_close(&tmp);
                             break;
+                        }
+                        else
+                        {
+                            if(return_fd > 0)
+                            {
+                                socket_tls_close(&tmp);
+                            }
+                        }
                         
                         str_len -= packet_len;
                     }
                 }
                 else
                 {
-                    accept_close(tmp->fd);
+                    struct session *s = NULL;
+
+                    HASH_FIND(hh1, session_sock, &tmp->fd, sizeof(int), s);
+                    if (s != NULL)
+                        session_close(s);
+                    socket_tls_close(&tmp);
                 }
             }
         }

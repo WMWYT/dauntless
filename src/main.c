@@ -28,17 +28,17 @@ int main(int argc, char * const argv[])
 
     printf_logo();
 
-    config_init();
+    config_init();  //初始化服务器配置
 
     while( (opt = getopt(argc, argv, "hpc:")) != -1 )
     {
         switch(opt)
         {
             case 'p':
-                config.port = atoi(optarg );
+                config.port = atoi(optarg); //服务器端口
                 break;
             case 'c':
-                config_file_load(optarg);
+                config_file_load(optarg);   //服务器配置文件
                 break;
             case '?':
                 printf("格式错误\n");
