@@ -400,8 +400,8 @@ void delete_node(struct TrieNode * node, char * key, char * client_id){
         }
     }else{
         for(i = 0; key[i + 1] != '\0' && key[i + 1] != '/'; i++);
-        tmp_str = (char *) malloc(sizeof(char) * (i - tmp_int + 1));
-        memset(tmp_str, 0, sizeof(char) * (i - tmp_int + 1));
+        tmp_str = (char *) malloc(sizeof(char) * (i - tmp_int + 2));
+        memset(tmp_str, 0, sizeof(char) * (i - tmp_int + 2));
         strncpy(tmp_str, &key[tmp_int], i - tmp_int + 1);
 
         if(!strcmp(tmp_str, "#")){

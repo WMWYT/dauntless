@@ -14,6 +14,10 @@ extern struct session *session_sock;
 
 void socket_tls_close(SocketData **pps)
 {
+    printf("-----------------\n");
+    session_printf_all();
+    session_topic_printf_all();
+    printf("-----------------\n");
     if (*pps == NULL)
     {
         return;
@@ -189,6 +193,10 @@ void server_socket_tls_loop(SocketData *server_socket)
                         }
                         
                         str_len -= packet_len;
+                        printf("-----------------\n");
+                        session_printf_all();
+                        session_topic_printf_all();
+                        printf("-----------------\n");
                     }
                 }
                 else

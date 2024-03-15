@@ -139,6 +139,11 @@ int server_socket_loop(int server_sock)
                         }
 
                         str_len -= packet_len;
+
+                        printf("-----------------\n");
+                        session_printf_all();
+                        session_topic_printf_all();
+                        printf("-----------------\n");
                     }
                 }
                 else

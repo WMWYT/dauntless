@@ -191,8 +191,8 @@ struct publish_packet * mqtt_publish_packet_create(struct fixed_header header, u
 
     int str_len = packet->publish_header.remaining_length - packet->variable_header.topic_name->string_len - 2;
 
-    packet->payload = (unsigned char *) malloc(str_len);
-    memset(packet->payload, 0, str_len);
+    packet->payload = (unsigned char *) malloc(sizeof(unsigned char) * (str_len + 1));
+    memset(packet->payload, 0, sizeof(packet->payload));
     memcpy(packet->payload, buff, str_len);
     packet->payload_len = str_len;
 
