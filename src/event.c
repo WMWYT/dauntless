@@ -32,14 +32,12 @@ int send_infomation(SocketData *data, char *buff, int buff_size)
     }
 }
 
-// int event_handle(int * packet_len, char * buff, int fd){
 int event_handle(SocketData *data, char *buff, int *packet_len)
 {
     struct session *s;
     struct session_topic *st;
     struct session *session_flag;
 
-    // HASH_FIND(hh1, session_sock, &fd, sizeof(int), s);
     HASH_FIND(hh1, session_sock, &data->fd, sizeof(int), s);
 
     mqtt_packet = mqtt_pack_decode(buff, packet_len);
@@ -73,10 +71,6 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
                 session_add_will_payload(mqtt_packet->connect->payload.will_payload->string, session_flag);
             }
 
-            // send(fd, mqtt_connack_encode(!(mqtt_packet->connect->variable_header.connect_flags >> 1), \
-            //                                 CONNECT_ACCEPTED), \
-            //         4, 0);
-
             send_infomation(data, mqtt_connack_encode(!(mqtt_packet->connect->variable_header.connect_flags >> 1), CONNECT_ACCEPTED),
                             4);
 
@@ -109,7 +103,6 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
                                                                         id_M, id_L,
                                                                         p_qos->payload,
                                                                         publish_buff);
-                                // write(fd, publish_buff, buff_size);
                                 send_infomation(data, publish_buff, buff_size);
                             }
                         }
@@ -137,7 +130,6 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
         }
         else
         {
-            // send(fd, mqtt_connack_encode(0, CONNECT_ERROR_AUTHORIZED), 4, 0);
             send_infomation(data, mqtt_connack_encode(0, CONNECT_ERROR_AUTHORIZED), 4);
         }
 
@@ -190,19 +182,23 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
                 }
 
                 if (s != NULL)
-                    write(s->sock, publish_buff, buff_size);
+                {
+                    SocketData tmp;
+                    tmp.fd = s->sock;
+                    tmp.ssl = s->ssl;
+                    tmp.ctx = s->ctx;
+                    send_infomation(&tmp, publish_buff, buff_size);
+                }
             }
         }
 
         if (mqtt_packet->publish->qos == 1)
         {
-            // write(fd, mqtt_publish_qos_encode(PUBACK, 0, mqtt_packet->publish->variable_header.identifier_MSB, mqtt_packet->publish->variable_header.identifier_LSB), 4);
             send_infomation(data, mqtt_publish_qos_encode(PUBACK, 0, mqtt_packet->publish->variable_header.identifier_MSB, mqtt_packet->publish->variable_header.identifier_LSB), 4);
         }
 
         if (mqtt_packet->publish->qos == 2)
         {
-            // write(fd, mqtt_publish_qos_encode(PUBREC, 0, mqtt_packet->publish->variable_header.identifier_MSB, mqtt_packet->publish->variable_header.identifier_LSB), 4);
             send_infomation(data, mqtt_publish_qos_encode(PUBREC, 0, mqtt_packet->publish->variable_header.identifier_MSB, mqtt_packet->publish->variable_header.identifier_LSB), 4);
         }
     }
@@ -222,7 +218,6 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
     {
         printf("pubrel packet\n");
         session_publish_printf();
-        // write(fd, mqtt_publish_qos_encode(PUBCOMP, 0, mqtt_packet->const_packet->variable_header.byte1, mqtt_packet->const_packet->variable_header.byte2), 4);
         send_infomation(data, mqtt_publish_qos_encode(PUBCOMP, 0, mqtt_packet->const_packet->variable_header.byte1, mqtt_packet->const_packet->variable_header.byte2), 4);
     }
 
@@ -235,7 +230,6 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
         buff[1] = mqtt_packet->const_packet->variable_header.byte2;
         session_publish_delete(string_len(buff));
 
-        // write(fd, mqtt_publish_qos_encode(PUBREL, 2, mqtt_packet->const_packet->variable_header.byte1, mqtt_packet->const_packet->variable_header.byte2), 4);
         send_infomation(data, mqtt_publish_qos_encode(PUBREL, 2, mqtt_packet->const_packet->variable_header.byte1, mqtt_packet->const_packet->variable_header.byte2), 4);
     }
 
@@ -256,11 +250,6 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
         //         printf("subscribe code: %d\n", return_code[i]);
         //     }
         // }
-
-        // write(fd, mqtt_suback_encode(mqtt_packet->subscribe->variable_header.identifier_MSB, \
-        //                             mqtt_packet->subscribe->variable_header.identifier_LSB, \
-        //                             mqtt_packet->subscribe->topic_size, return_code), \
-        //     mqtt_packet->subscribe->topic_size + 4);
 
         send_infomation(data, mqtt_suback_encode(mqtt_packet->subscribe->variable_header.identifier_MSB, mqtt_packet->subscribe->variable_header.identifier_LSB, mqtt_packet->subscribe->topic_size, return_code),
                         mqtt_packet->subscribe->topic_size + 4);
@@ -286,13 +275,11 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
             session_topic_unsubscribe(mqtt_packet->unsubscribe->payload[i]->string, s->client_id);
         }
 
-        // write(fd, mqtt_unsuback_encode(mqtt_packet->unsubscribe->variable_header.identifier_MSB,mqtt_packet->unsubscribe->variable_header.identifier_LSB), 4);
         send_infomation(data, mqtt_unsuback_encode(mqtt_packet->unsubscribe->variable_header.identifier_MSB, mqtt_packet->unsubscribe->variable_header.identifier_LSB), 4);
     }
 
     if (mqtt_packet->pingreq->pingreq_header.control_packet_1 == PINGREQ)
     {
-        // write(fd, mqtt_pingresp_encode(), 2);
         send_infomation(data, mqtt_pingresp_encode(), 2);
     }
 

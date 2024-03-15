@@ -57,6 +57,10 @@ void server_socket_ultimately()
 
 void socket_close(int fd)
 {
+    printf("-----------------\n");
+    session_printf_all();
+    session_topic_printf_all();
+    printf("-----------------\n");
     epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
     close(fd);
     printf("close socke %d\n", fd);
