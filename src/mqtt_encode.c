@@ -331,16 +331,6 @@ char * suback_packet_to_hex(struct suback_packet packet){
     return buff;
 }
 
-char * mqtt_pingresp_encode(){
-    char * buff = (char *) malloc(sizeof(char) * 3);
-    memset(buff, 0, sizeof(char) * 3);
-
-    buff[0] = 13 * 0x10 + 0;
-    buff[1] = 0;
-
-    return buff;
-}
-
 char * mqtt_suback_encode(int i_M, int i_L, int topic_size, int * return_code){
     struct suback_packet packet;
 
@@ -350,17 +340,7 @@ char * mqtt_suback_encode(int i_M, int i_L, int topic_size, int * return_code){
     packet.variable_header.identifier_MSB = i_M;
     packet.variable_header.identifier_LSB = i_L;
 
-    if(return_code == NULL){
-        packet.return_codes = (int *) malloc(sizeof(int) * topic_size);
-        memset(packet.return_codes, 0, sizeof(int) * topic_size);
-
-        //TODO 当不满足条件的时候为0x80,并且配合qos
-        for(int i = 0; i < topic_size; i++){
-            packet.return_codes[i] = 0;
-        }
-    }else{
-        packet.return_codes = return_code;
-    }
+    packet.return_codes = return_code;
 
     for(int i = 0; i < topic_size; i++){
         printf("mqtt_suback_encode: %d\n", packet.return_codes[i]);
@@ -382,4 +362,14 @@ char * mqtt_unsuback_encode(int i_M, int i_L){
     packet.variable_header.byte2 = i_L;
 
     return const_packet_to_hex(packet);
+}
+
+char * mqtt_pingresp_encode(){
+    char * buff = (char *) malloc(sizeof(char) * 3);
+    memset(buff, 0, sizeof(char) * 3);
+
+    buff[0] = 13 * 0x10 + 0;
+    buff[1] = 0;
+
+    return buff;
 }

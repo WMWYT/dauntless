@@ -10,8 +10,8 @@
 extern struct RootNode root;
 extern struct SYSNode sys;
 struct session_info *session_info;
-struct session *session_sock;
-struct session *session_client_id;
+struct session * session_sock = NULL;
+struct session * session_client_id = NULL;
 struct session_publish session_packet_identifier[65536];
 
 char *get_rand_str(int num)
@@ -52,28 +52,65 @@ char *get_rand_str(int num)
 }
 
 /**************session***************/
-struct session *session_add(int s_sock, SSL *sock_ssl, SSL_CTX *sock_ctx, char *s_client_id, int clean_session)
+#define FREE_MQTT_STRING(A) \
+    (A)->length_LSB = 0; \
+    (A)->length_MSB = 0; \
+    if((A)->string){ \
+        free((A)->string); \
+        (A)->string = NULL; \
+    } \
+    (A)->string_len = 0;
+
+void free_connect_payload(connect_payload * payload)
+{
+    if(payload->client_id)
+    {
+        FREE_MQTT_STRING(payload->client_id)
+    }
+
+    if(payload->user_name)
+    {
+        FREE_MQTT_STRING(payload->user_name)
+    }
+
+    if(payload->password)
+    {
+        FREE_MQTT_STRING(payload->password)
+    }
+
+    if(payload->will_topic)
+    {
+        FREE_MQTT_STRING(payload->will_topic)
+    }
+
+    if(payload->will_payload)
+    {
+        FREE_MQTT_STRING(payload->will_payload)
+    }
+}
+
+struct session *session_add(int s_sock, SSL *sock_ssl, SSL_CTX *sock_ctx, connect_payload * payload, int connect_flag) //char *s_client_id, char * user_name, int clean_session)
 {
     struct session *s = NULL;
     char *client_id;
 
-    if (s_client_id != NULL)
+    if (payload->client_id != NULL)
     {
-        HASH_FIND(hh2, session_client_id, s_client_id, strlen(s_client_id), s);
+        HASH_FIND(hh2, session_client_id, payload->client_id, payload->client_id->string_len, s);
         if (s)
         {
             int tmp = s->sock;
             SSL * tmp_ssl = s->ssl;
             SSL_CTX * tmp_ctx = s->ctx;
+
             if(s->ssl != NULL)
                 SSL_free(s->ssl);
             if(s->ctx != NULL)
                 SSL_CTX_free(s->ctx);
+            
+            free_connect_payload(s->connect_info);
             utarray_free(s->topic);
-            if (s->will_topic)
-                free(s->will_topic);
-            if (s->will_topic)
-                free(s->will_payload);
+
             HASH_DELETE(hh1, session_sock, s);
             HASH_DELETE(hh2, session_client_id, s);
 
@@ -82,10 +119,15 @@ struct session *session_add(int s_sock, SSL *sock_ssl, SSL_CTX *sock_ctx, char *
             s->sock = tmp;
             s->ssl = tmp_ssl;
             s->ctx = tmp_ctx;
-            strcpy(s->client_id, s_client_id);
+
+            s->connect_info = (connect_payload * ) malloc(sizeof(connect_payload));
+            memset(s->connect_info, 0, sizeof(connect_payload));
+            memcpy(s->connect_info, payload, sizeof(connect_payload));
+
+            strcpy(s->client_id, payload->client_id->string);
             utarray_new(s->topic, &ut_str_icd);
-            s->clean_session = clean_session;
-            s->connect_flag = 1;
+            s->clean_session = (connect_flag >> 1) & 1;
+            s->will_qos = ((connect_flag >> 4) & 1) * 2 + (connect_flag >> 3) & 1;
 
             HASH_ADD(hh1, session_sock, sock, sizeof(int), s);
             HASH_ADD(hh2, session_client_id, client_id, strlen(s->client_id), s);
@@ -95,8 +137,8 @@ struct session *session_add(int s_sock, SSL *sock_ssl, SSL_CTX *sock_ctx, char *
     }
     else
     {
-        s_client_id = (char *)malloc(sizeof(char) * 9);
-        strcpy(s_client_id, get_rand_str(8));
+        client_id = (char *)malloc(sizeof(char) * 9);
+        strcpy(client_id, get_rand_str(8));
     }
 
     if (s == NULL)
@@ -106,9 +148,19 @@ struct session *session_add(int s_sock, SSL *sock_ssl, SSL_CTX *sock_ctx, char *
         s->sock = s_sock;
         s->ssl = sock_ssl;
         s->ctx = sock_ctx;
-        strcpy(s->client_id, s_client_id);
+
+        s->connect_info = (connect_payload * ) malloc(sizeof(connect_payload));
+        memset(s->connect_info, 0, sizeof(connect_payload));
+        memcpy(s->connect_info, payload, sizeof(connect_payload));
+
+        if(payload->client_id)
+            strcpy(s->client_id, payload->client_id->string);
+        else
+            strcpy(s->client_id, client_id);
+            
         utarray_new(s->topic, &ut_str_icd);
-        s->clean_session = clean_session;
+        s->clean_session = (connect_flag >> 1) & 1;
+        s->will_qos = ((connect_flag >> 4) & 1) * 2 + (connect_flag >> 3) & 1;
 
         HASH_ADD(hh1, session_sock, sock, sizeof(int), s);
         HASH_ADD(hh2, session_client_id, client_id, strlen(s->client_id), s);
@@ -138,30 +190,6 @@ void session_delete(struct session *s)
 
     if (s)
         free(s);
-}
-
-void session_add_will_topic(char *s_will_topic, int qos, struct session *s)
-{
-    if (s->will_topic == NULL)
-    {
-        s->will_topic = (char *)malloc(sizeof(char) * (strlen(s_will_topic) + 1));
-        memset(s->will_topic, 0, sizeof(char) * (strlen(s_will_topic) + 1));
-    }
-
-    s->will_qos = qos;
-    printf("session_add_will_topic:%d\n", s->will_qos);
-    memmove(s->will_topic, s_will_topic, strlen(s_will_topic));
-}
-
-void session_add_will_payload(char *s_will_payload, struct session *s)
-{
-    if (s->will_payload == NULL)
-    {
-        s->will_payload = (char *)malloc(sizeof(char) * (strlen(s_will_payload) + 1));
-        memset(s->will_payload, 0, sizeof(char) * (strlen(s_will_payload) + 1));
-    }
-
-    memmove(s->will_payload, s_will_payload, strlen(s_will_payload));
 }
 
 void session_subscribe_topic(char *s_topic, struct session *s)
@@ -198,12 +226,16 @@ void session_printf_all()
 
     HASH_ITER(hh1, session_sock, current, tmp)
     {
-        printf("sock %d: %s subscribe topic -- ", current->sock, current->client_id);
+        printf("sock %d: %s\n", current->sock, current->client_id);
+        if(current->connect_info->user_name)
+            printf(" user_name: %s\nsubscribe topic -- ", current->connect_info->user_name->string);
+
+        if(current->connect_info->will_topic)
+            printf("will topic -- %s payload -- %s\n", current->connect_info->will_topic->string, current->connect_info->will_payload->string);
+
         while ((p = (char **)utarray_next(current->topic, p)))
             printf("%s ", *p);
         printf("\n");
-
-        printf("will topic -- %s payload -- %s\n", current->will_topic, current->will_payload);
     }
 }
 
@@ -234,13 +266,13 @@ void session_delete_all()
 void publish_will_message(struct session *s)
 {
     struct session *will_s;
-    UT_array *will_client_id;
+    UT_array * will_client_id = NULL;
     int buff_size = 0;
     int qos = s->will_qos;
     char buff[65535] = {0};
     ChilderNode *p = NULL;
 
-    will_client_id = session_topic_search(s->will_topic);
+    if(s->connect_info->will_topic) will_client_id = session_topic_search(s->connect_info->will_topic->string);
     if (will_client_id != NULL)
     {
         if (utarray_front(will_client_id) != NULL)
@@ -253,17 +285,17 @@ void publish_will_message(struct session *s)
                     qos = p->max_qos;
 
                 if (qos == 0)
-                    buff_size = mqtt_publish_encode_qos_0(s->will_topic, s->will_payload, buff);
+                    buff_size = mqtt_publish_encode_qos_0(s->connect_info->will_topic->string, s->connect_info->will_payload->string, buff);
                 else
                 {
                     unsigned char id_M, id_L;
                     int packet_id = session_publish_add(strlen(p->client_id), p->client_id,
                                                         qos,
-                                                        strlen(s->will_topic), s->will_topic,
-                                                        strlen(s->will_payload), s->will_payload);
+                                                        s->connect_info->will_topic->string_len, s->connect_info->will_topic->string,
+                                                        s->connect_info->will_payload->string_len, s->connect_info->will_payload->string);
                     ML_encode(packet_id, &id_M, &id_L);
 
-                    buff_size = mqtt_publish_encode_qos_1_2(s->will_topic, qos, id_M, id_L, s->will_payload, buff);
+                    buff_size = mqtt_publish_encode_qos_1_2(s->connect_info->will_topic->string, qos, id_M, id_L, s->connect_info->will_payload->string, buff);
                 }
 
                 write(will_s->sock, buff, buff_size);

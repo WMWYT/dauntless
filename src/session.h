@@ -8,22 +8,20 @@
 #include "utlist.h"
 
 struct session {
+    // key
     int sock;
+    char client_id[64];
 
     // tls
     SSL *ssl;
     SSL_CTX *ctx;
 
-    char client_id[64];
-
     //info
-    int clean_session;
     int will_qos;
-    char * will_topic;
-    char * will_payload;
-    UT_array * topic;
+    int clean_session;
+    connect_payload * connect_info;
 
-    int connect_flag;
+    UT_array * topic;
 
     UT_hash_handle hh1;
     UT_hash_handle hh2;
@@ -40,7 +38,8 @@ struct session_publish{
     UT_array * payload;
 };
 
-struct session * session_add(int s_sock, SSL *sock_ssl, SSL_CTX *sock_ctx, char *s_client_id, int clean_session);
+// struct session * session_add(int s_sock, SSL *sock_ssl, SSL_CTX *sock_ctx, char *s_client_id, char * user_name, int clean_session);
+struct session *session_add(int s_sock, SSL *sock_ssl, SSL_CTX *sock_ctx, connect_payload * payload, int clean_session);
 void session_add_will_topic(char * s_will_topic, int qos, struct session *s);
 void session_add_will_payload(char * s_will_payload, struct session * s);
 void session_subscribe_topic(char * s_topic, struct session *s);

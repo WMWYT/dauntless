@@ -38,15 +38,11 @@ struct mqtt_string * hex_to_string(unsigned char * buff){
 
     if(value != 0){
         string->string = (unsigned char *) malloc(sizeof(unsigned char) * (value + 1));
-        memset(string->string, 0, value + 1);
+        memset(string->string, 0, sizeof(unsigned char) * (value + 1));
 
-        //TODO 有U+0000和U+D800到U+DFFF的字符时关闭链接
         strncpy(string->string, buff, value);
-        if(strlen(string->string) != value){        
-            return NULL;
-        }
     }else{
-        string->string = NULL;
+        return NULL;
     }
 
     return string;
@@ -90,10 +86,18 @@ struct connect_packet *mqtt_connect_packet_create(struct fixed_header header, un
     packet->variable_header.keep_alive_LSB = *buff++;
 
     packet->payload.client_id = hex_to_string(buff);
-    buff += packet->payload.client_id->string_len + 2;
 
-    if(packet->payload.client_id->string_len >= 64){
-        return NULL;
+    if(packet->payload.client_id != NULL)
+    {
+        buff += packet->payload.client_id->string_len + 2;
+
+        if(packet->payload.client_id->string_len >= 64){
+            return NULL;
+        }
+    }
+    else
+    {
+        buff += 2;
     }
 
     if(packet->payload.client_id->string_len == 0 && packet->variable_header.connect_flags >> 1 & 0){

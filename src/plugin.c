@@ -51,8 +51,16 @@ int dauntless_plugin_init(char * plugin_lib_dir, char * type)
 
 int dauntless_plugin_connect_handle(struct connect_packet * connect)
 {
-    if(dauntless_plugin != NULL)
+    if(dauntless_plugin != NULL && dauntless_plugin->plugin_connect_handle != NULL)
         return dauntless_plugin->plugin_connect_handle(connect);
 
-    return CONNECT_ERROR_AUTHORIZED;
+    return CONNECT_ERROR_USER_OR_PASSWORD;
+}
+
+int dauntless_plugin_subscribe_handle(char * user_name, subscribe_payload * payload)
+{
+    if(dauntless_plugin != NULL && dauntless_plugin->plugin_subscribe_handle != NULL)
+        return dauntless_plugin->plugin_subscribe_handle(user_name, payload);
+
+    return payload->qos;
 }

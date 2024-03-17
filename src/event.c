@@ -61,15 +61,19 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
 
         if (error_code == CONNECT_ACCEPTED)
         {
-            session_flag = session_add(data->fd, data->ssl, data->ctx, mqtt_packet->connect->payload.client_id->string, (mqtt_packet->connect->variable_header.connect_flags >> 1));
+            // session_flag = session_add(data->fd, data->ssl, data->ctx, 
+            //                            mqtt_packet->connect->payload.client_id->string, 
+            //                            mqtt_packet->connect->payload.user_name,
+            //                            (mqtt_packet->connect->variable_header.connect_flags >> 1));
 
-            if (mqtt_packet->connect->variable_header.connect_flags >> 2 & 1)
-            {
-                session_add_will_topic(mqtt_packet->connect->payload.will_topic->string,
-                                       ((mqtt_packet->connect->variable_header.connect_flags >> 4 & 1) * 2 + (mqtt_packet->connect->variable_header.connect_flags >> 3 & 1)),
-                                       session_flag);
-                session_add_will_payload(mqtt_packet->connect->payload.will_payload->string, session_flag);
-            }
+            // if (mqtt_packet->connect->variable_header.connect_flags >> 2 & 1)
+            // {
+            //     session_add_will_topic(mqtt_packet->connect->payload.will_topic->string,
+            //                            ((mqtt_packet->connect->variable_header.connect_flags >> 4 & 1) * 2 + (mqtt_packet->connect->variable_header.connect_flags >> 3 & 1)),
+            //                            session_flag);
+            //     session_add_will_payload(mqtt_packet->connect->payload.will_payload->string, session_flag);
+            // }
+            session_flag = session_add(data->fd, data->ssl, data->ctx, &mqtt_packet->connect->payload, mqtt_packet->connect->variable_header.connect_flags);
 
             send_infomation(data, mqtt_connack_encode(!(mqtt_packet->connect->variable_header.connect_flags >> 1), CONNECT_ACCEPTED),
                             4);
@@ -81,10 +85,6 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
                 {
                     if (session_packet_identifier[i].client_id != NULL)
                     {
-                        printf("publish_id:%d\n", i);
-                        printf("publish_client_id:%s\n", session_packet_identifier[i].client_id);
-                        printf("packet_client_id:%s\n", mqtt_packet->connect->payload.client_id->string);
-
                         if (!strcmp(session_packet_identifier[i].client_id,
                                     mqtt_packet->connect->payload.client_id->string))
                         {
@@ -242,20 +242,20 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
     if (mqtt_packet->subscribe->subscribe_header.control_packet_1 == SUBSCRIBE)
     {
         printf("packet subscribe\n");
-        int *return_code = NULL;
-
-        // if(config.is_anonymously){
-        //     return_code = control_subscribe(mqtt_packet->subscribe);
-        //     for(int i = 0; i < mqtt_packet->subscribe->topic_size; i++){
-        //         printf("subscribe code: %d\n", return_code[i]);
-        //     }
-        // }
-
-        send_infomation(data, mqtt_suback_encode(mqtt_packet->subscribe->variable_header.identifier_MSB, mqtt_packet->subscribe->variable_header.identifier_LSB, mqtt_packet->subscribe->topic_size, return_code),
-                        mqtt_packet->subscribe->topic_size + 4);
+        int *return_code = (int *)malloc(sizeof(int) * (mqtt_packet->subscribe->topic_size + 1));
+        memset(return_code, 0, sizeof(return_code));
 
         for (int i = 0; i < mqtt_packet->subscribe->topic_size; i++)
         {
+            if(config.is_anonymously)
+            {
+                return_code[i] = dauntless_plugin_subscribe_handle(s->connect_info->user_name->string, &mqtt_packet->subscribe->payload[i]);
+            }
+            else
+            {
+                return_code[i] = mqtt_packet->subscribe->payload->qos;
+            }
+
             if (return_code == NULL || return_code[i] != 0x80)
             {
                 session_subscribe_topic(mqtt_packet->subscribe->payload[i].topic_filter->string, s);
@@ -264,6 +264,13 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
                                         s->client_id);
             }
         }
+
+        send_infomation(data, mqtt_suback_encode(mqtt_packet->subscribe->variable_header.identifier_MSB, 
+                                                 mqtt_packet->subscribe->variable_header.identifier_LSB, 
+                                                 mqtt_packet->subscribe->topic_size, return_code),
+                        mqtt_packet->subscribe->topic_size + 4);
+
+        if(return_code) free(return_code);
     }
 
     if (mqtt_packet->unsubscribe->unsubscribe_header.control_packet_1 == UNSUBSCRIBE)

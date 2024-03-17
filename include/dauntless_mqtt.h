@@ -57,6 +57,16 @@ struct mqtt_string
 
 typedef struct mqtt_string mqtt_string;
 
+struct connect_payload{
+    mqtt_string * client_id;
+    mqtt_string * will_topic;
+    mqtt_string * will_payload;
+    mqtt_string * user_name;
+    mqtt_string * password;
+};
+
+typedef struct connect_payload connect_payload;
+
 struct connect_packet{
     fixed_header connect_header;
     struct {
@@ -70,13 +80,15 @@ struct connect_packet{
         unsigned char keep_alive_LSB;
     }variable_header;
 
-    struct {
-        mqtt_string * client_id;
-        mqtt_string * will_topic;
-        mqtt_string * will_payload;
-        mqtt_string * user_name;
-        mqtt_string * password;
-    }payload;
+    // struct {
+    //     mqtt_string * client_id;
+    //     mqtt_string * will_topic;
+    //     mqtt_string * will_payload;
+    //     mqtt_string * user_name;
+    //     mqtt_string * password;
+    // }payload;
+
+    connect_payload payload;
 
     int error_code;
 };
