@@ -40,8 +40,6 @@ struct session_publish{
 
 // struct session * session_add(int s_sock, SSL *sock_ssl, SSL_CTX *sock_ctx, char *s_client_id, char * user_name, int clean_session);
 struct session *session_add(int s_sock, SSL *sock_ssl, SSL_CTX *sock_ctx, connect_payload * payload, int clean_session);
-void session_add_will_topic(char * s_will_topic, int qos, struct session *s);
-void session_add_will_payload(char * s_will_payload, struct session * s);
 void session_subscribe_topic(char * s_topic, struct session *s);
 void session_unsubscribe_topic(char * s_topic, struct session * s);
 void session_printf_all();

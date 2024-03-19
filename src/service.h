@@ -39,5 +39,6 @@ int dauntless_plugin_init(char *plugin_lib_dir, char *type);
 int dauntless_plugin_destroyed();
 int dauntless_plugin_connect_handle(struct connect_packet *connect);
 int dauntless_plugin_subscribe_handle(char * user_name, subscribe_payload * payload);
+int dauntless_plugin_publish_handle(char * write_user_name, char * read_user_name, char * topic, char * payload);
 
 #endif

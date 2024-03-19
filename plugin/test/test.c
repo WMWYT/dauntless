@@ -19,6 +19,16 @@ int plugin_connect_handle(struct connect_packet * connect)
     return CONNECT_ACCEPTED;
 }
 
+int plugin_publish_handle(char * w_user, char * r_user, char * topic, char * payload)
+{
+    printf("w_user -- %s\n", w_user);
+    printf("r_user -- %s\n", r_user);
+    printf("topic -- %s\n", topic);
+    printf("payload -- %s\n", payload);
+
+    return 0;
+}
+
 int plugin_subscribe_handle(char * user_name, subscribe_payload * subscribe)
 {
     if(!strcmp(user_name, "user") && !strcmp(subscribe->topic_filter->string, "test"))
@@ -32,6 +42,7 @@ int plugin_subscribe_handle(char * user_name, subscribe_payload * subscribe)
 dauntless_plugin_struct plugin_struct = {
     .plugin_info = "test",
     .plugin_connect_handle = plugin_connect_handle,
+    .plugin_publish_handle = plugin_publish_handle,
     .plugin_subscribe_handle = plugin_subscribe_handle
 };
 

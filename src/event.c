@@ -61,18 +61,6 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
 
         if (error_code == CONNECT_ACCEPTED)
         {
-            // session_flag = session_add(data->fd, data->ssl, data->ctx, 
-            //                            mqtt_packet->connect->payload.client_id->string, 
-            //                            mqtt_packet->connect->payload.user_name,
-            //                            (mqtt_packet->connect->variable_header.connect_flags >> 1));
-
-            // if (mqtt_packet->connect->variable_header.connect_flags >> 2 & 1)
-            // {
-            //     session_add_will_topic(mqtt_packet->connect->payload.will_topic->string,
-            //                            ((mqtt_packet->connect->variable_header.connect_flags >> 4 & 1) * 2 + (mqtt_packet->connect->variable_header.connect_flags >> 3 & 1)),
-            //                            session_flag);
-            //     session_add_will_payload(mqtt_packet->connect->payload.will_payload->string, session_flag);
-            // }
             session_flag = session_add(data->fd, data->ssl, data->ctx, &mqtt_packet->connect->payload, mqtt_packet->connect->variable_header.connect_flags);
 
             send_infomation(data, mqtt_connack_encode(!(mqtt_packet->connect->variable_header.connect_flags >> 1), CONNECT_ACCEPTED),
@@ -144,6 +132,7 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
     if (mqtt_packet->publish->publish_header.control_packet_1 == PUBLISH)
     {
         printf("packet publish\n");
+        struct session * publish_client;
         UT_array *publish_client_id;
         ChilderNode *p = NULL;
         int qos = mqtt_packet->publish->qos;
@@ -156,8 +145,7 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
         {
             while ((p = (ChilderNode *)utarray_next(publish_client_id, p)))
             {
-                printf("publish_client_id:%s\n", p->client_id);
-                HASH_FIND(hh2, session_client_id, p->client_id, strlen(p->client_id), s);
+                HASH_FIND(hh2, session_client_id, p->client_id, strlen(p->client_id), publish_client);
 
                 if (qos > p->max_qos)
                 {
@@ -181,12 +169,21 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
                     buff_size = mqtt_publish_encode_qos_1_2(mqtt_packet->publish->variable_header.topic_name->string, qos, id_M, id_L, mqtt_packet->publish->payload, publish_buff);
                 }
 
-                if (s != NULL)
+                if (publish_client != NULL)
                 {
                     SocketData tmp;
-                    tmp.fd = s->sock;
-                    tmp.ssl = s->ssl;
-                    tmp.ctx = s->ctx;
+                    tmp.fd = publish_client->sock;
+                    tmp.ssl = publish_client->ssl;
+                    tmp.ctx = publish_client->ctx;
+
+                    if(config.is_anonymously)
+                    {
+                        dauntless_plugin_publish_handle(s->connect_info->user_name->string, 
+                                                        publish_client->connect_info->user_name->string, 
+                                                        mqtt_packet->publish->variable_header.topic_name->string,
+                                                        mqtt_packet->publish->payload);
+                    }
+                    
                     send_infomation(&tmp, publish_buff, buff_size);
                 }
             }

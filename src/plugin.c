@@ -64,3 +64,12 @@ int dauntless_plugin_subscribe_handle(char * user_name, subscribe_payload * payl
 
     return payload->qos;
 }
+
+//TODO 增加publish报文的插件控制
+int dauntless_plugin_publish_handle(char * write_user_name, char * read_user_name, char * topic, char * payload)
+{
+    if(dauntless_plugin != NULL && dauntless_plugin->plugin_publish_handle != NULL)
+        return dauntless_plugin->plugin_publish_handle(write_user_name, read_user_name, topic, payload);
+
+    return 0;
+}

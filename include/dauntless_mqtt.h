@@ -80,14 +80,6 @@ struct connect_packet{
         unsigned char keep_alive_LSB;
     }variable_header;
 
-    // struct {
-    //     mqtt_string * client_id;
-    //     mqtt_string * will_topic;
-    //     mqtt_string * will_payload;
-    //     mqtt_string * user_name;
-    //     mqtt_string * password;
-    // }payload;
-
     connect_payload payload;
 
     int error_code;
