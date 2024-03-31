@@ -15,6 +15,6 @@ set(LIB_SRC
 
 add_executable(dauntless ${D_SOURCES} ${LIB_SRC})
 
-target_link_libraries(dauntless PRIVATE OpenSSL::SSL)
+target_link_libraries(dauntless PRIVATE OpenSSL::SSL dl)
 
 install(TARGETS dauntless RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
