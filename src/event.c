@@ -10,7 +10,6 @@
 #include "filtering.h"
 #include "session.h"
 #include "service.h"
-#include "log.h"
 #include "mqtt_decode.h"
 #include "mqtt_encode.h"
 

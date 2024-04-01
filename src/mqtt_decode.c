@@ -4,7 +4,6 @@
 #include <time.h>
 #include "mqtt_decode.h"
 #include "dauntless_mqtt.h"
-#include "log.h"
 
 int string_len(unsigned char * buff){
     int i = 1;
@@ -302,7 +301,7 @@ union mqtt_packet * mqtt_pack_decode(unsigned char * buff, int * packet_len)
         memset(packet_buff, 0, sizeof(unsigned char) * (value + 2));
         memmove(packet_buff, ++buff, value);
 
-        printf_buff("packet_buff", buff, value);
+        // printf_buff("packet_buff", buff, value);
     }
 
     switch (header.control_packet_1){

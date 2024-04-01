@@ -39,7 +39,8 @@ dauntless
 
 ## TODO
 
-* OpenSSL
-* 完善开发开发功能
+* log文件
+* dauntless_client
 * 添加线程
 * 打包
+* ctest测试

@@ -5,8 +5,10 @@
 #include "service.h"
 #include "session.h"
 #include "config.h"
+#include "log.h"
 
 extern struct config config;
+FILE * log_file = NULL;
 
 void printf_help(){
     printf("dauntless [-p port] [-c file name]\n");
@@ -28,6 +30,9 @@ int main(int argc, char * const argv[])
 
     printf_logo();
 
+    log_set_level(0);
+    log_set_quiet(0);
+
     config_init();  //初始化服务器配置
 
     while( (opt = getopt(argc, argv, "hpc:")) != -1 )
@@ -44,22 +49,37 @@ int main(int argc, char * const argv[])
                 printf("格式错误\n");
             case 'h':
                 printf_help();
-                exit(0);
-                break;
+                exit(EXIT_SUCCESS);
         }
     }
-    
+
     if (config.is_anonymously)
+    {
         if (dauntless_plugin_init(config.dir, config.control_type) < 0)
         {
-            printf("plugin init error\n");
+            log_error("plugin init error\n");
             exit(EXIT_FAILURE);
         }
-    
+    }
+
+    if(config.log)
+    {
+        log_file = fopen(config.log_file, "ab");
+        if(log_file == NULL)
+        {
+            log_error("can't open %s", config.log_file);
+            exit(EXIT_FAILURE);
+        }
+
+        log_add_fp(log_file, LOG_INFO);
+    }
+
     if(config.tls == 0)
         service_start();
     else
         service_tls_start();
+
+    if(log_file) fclose(log_file);
 
     return 0;
 }

@@ -1,0 +1,21 @@
+{
+    "cmake.debugConfig": {
+        "args": ["-c", "${workspaceFolder}/conf/dauntless.ini"]
+    },
+    "files.associations": {
+        "session.h": "c",
+        "dauntless.h": "c",
+        "mqtt.h": "c",
+        "stdio.h": "c",
+        "dauntless_mqtt.h": "c",
+        "mqtt_encode.h": "c",
+        "dauntless_plugin.h": "c",
+        "config.h": "c",
+        "signal.h": "c",
+        "unistd.h": "c",
+        "event.h": "c",
+        "service.h": "c",
+        "uthash.h": "c",
+        "iniparser.h": "c"
+    }
+}

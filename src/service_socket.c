@@ -33,13 +33,13 @@ int service_socket_init(int server_port)
 
     if(bind(server_sock, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0)
     {
-        printf("bind error!\n");
+        log_error("bind error!");
         return -1;
     }
 
     if(listen(server_sock, 5) < 0)
     {
-        printf("listen error!\n");
+        log_error("listen error!");
         return -1;
     }
 
@@ -92,7 +92,7 @@ int server_socket_loop(int server_sock)
         event_cnt = epoll_wait(epfd, ep_events, EPOLL_SIZE, -1);
         if(event_cnt == -1)
         {
-            printf("epoll wait error!\n");
+            log_warn("epoll wait error!\n");
             return -1;
         }
 
@@ -105,20 +105,20 @@ int server_socket_loop(int server_sock)
                 event.events = EPOLLIN;
                 event.data.fd = client_socket;
                 epoll_ctl(epfd, EPOLL_CTL_ADD, client_socket, &event);
-                printf("connected client: %d\n",client_socket);
+                log_info("connected client: %d",client_socket);
             }
             else
             {
                 int packet_len = 0;
                 str_len = read(ep_events[i].data.fd, buff, BUFF_SIZE);
                 printf("sock: %d ", ep_events[i].data.fd);
-                printf_buff("read", buff, str_len);
+                // printf_buff("read", buff, str_len);
                 if(str_len > 0)
                 {
                     while(str_len)
                     {
                         memmove(recv_buffer, buff + packet_len, str_len);
-                        printf_buff("recv_buffer", recv_buffer, str_len);
+                        // printf_buff("recv_buffer", recv_buffer, str_len);
 
                         SocketData data;
 

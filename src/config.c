@@ -1,6 +1,7 @@
 #include "config.h"
 #include <signal.h>
 #include "iniparser.h"
+#include "log.h"
 
 struct config config;
 
@@ -22,24 +23,35 @@ void config_file_load(char *file_dir)
         exit(EXIT_FAILURE);
     }
 
-    iniparser_dump(ini, stdout);
+    iniparser_dump(ini, NULL);
 
     config.port = iniparser_getint(ini, "info:port", DEFAULT_PORT);
     config.tls = iniparser_getboolean(ini, "info:tls", 0);
 
     if (config.tls)
     {
-        strcpy(config.key, iniparser_getstring(ini, "info:key", NULL));
-        if (config.key == NULL)
+        strcpy(config.key, iniparser_getstring(ini, "info:key", "NULL"));
+        if (!strcmp(config.key, "NULL"))
         {
             printf("config error! tls key\n");
             exit(EXIT_FAILURE);
         }
 
-        strcpy(config.cert, iniparser_getstring(ini, "info:cert", NULL));
-        if (config.cert == NULL)
+        strcpy(config.cert, iniparser_getstring(ini, "info:cert", "NULL"));
+        if (!strcmp(config.cert, "NULL"))
         {
             printf("config error! tls cert\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    config.log = iniparser_getboolean(ini, "log:log", 0);
+    if(config.log)
+    {
+        strcpy(config.log_file, iniparser_getstring(ini, "log:log_file", "NULL"));
+        if(!strcmp(config.log_file, "NULL"))
+        {
+            log_error("config error! log file NULL");
             exit(EXIT_FAILURE);
         }
     }
@@ -48,15 +60,15 @@ void config_file_load(char *file_dir)
 
     if (config.is_anonymously)
     {
-        strcpy(config.control_type, iniparser_getstring(ini, "login:control_type", NULL));
-        if (config.control_type == NULL)
+        strcpy(config.control_type, iniparser_getstring(ini, "login:control_type", "NULL"));
+        if (!strcmp(config.control_type, "NULL"))
         {
             printf("config error! you not have set [control_type].\n");
             exit(EXIT_FAILURE);
         }
 
-        strcpy(config.dir, iniparser_getstring(ini, "control:dir", NULL));
-        if (config.dir == NULL)
+        strcpy(config.dir, iniparser_getstring(ini, "control:dir", "NULL"));
+        if (!strcmp(config.dir, "NULL"))
         {
             printf("config error! you not have set [dir].\n");
             exit(EXIT_FAILURE);

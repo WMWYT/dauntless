@@ -3,7 +3,6 @@
 #include <string.h>
 #include "mqtt_encode.h"
 #include "dauntless_mqtt.h"
-#include "log.h"
 
 void ML_encode(int x, unsigned char * MSB, unsigned char * LSB){
     int encoded_byte = 0;
@@ -119,7 +118,7 @@ char * conncet_packet_to_hex(struct connect_packet packet){
         buff += packet.payload.password->string_len;
     }
 
-    printf_buff("connect packet", flag, packet.connect_header.remaining_length + 2);
+    // printf_buff("connect packet", flag, packet.connect_header.remaining_length + 2);
 
     return flag;
 }
@@ -285,7 +284,7 @@ char * subscribe_packet_to_hex(struct subscribe_packet packet){
         *buff++ = packet.payload[i].qos;
     }
 
-    printf_buff("flag", flag, packet.subscribe_header.remaining_length + 2);
+    // printf_buff("flag", flag, packet.subscribe_header.remaining_length + 2);
 
     return flag;
 }
@@ -326,7 +325,7 @@ char * suback_packet_to_hex(struct suback_packet packet){
         buff[i + 4] = packet.return_codes[i];
     }
 
-    printf_buff("suback_packet", buff, packet.suback_header.remaining_length + 2);
+    // printf_buff("suback_packet", buff, packet.suback_header.remaining_length + 2);
 
     return buff;
 }

@@ -8,7 +8,6 @@
 #include "service.h"
 #include "session.h"
 #include "event.h"
-#include "log.h"
 
 extern struct session *session_sock;
 
@@ -82,12 +81,6 @@ SocketData *socket_tls_accept(SocketData* server, ClientData* pclient_data)
     unsigned int addr_size = sizeof(struct sockaddr_in);
 
     client = (SocketData*) malloc(sizeof(SocketData));
-
-    if(client == NULL)
-    {
-        // out of memory, stop everything
-        exit(1);
-    }
 
     client->fd = accept(server->fd, (struct sockaddr*) &peer_addr, &addr_size);
     client->ssl = NULL;
@@ -169,13 +162,13 @@ void server_socket_tls_loop(SocketData *server_socket)
                 int packet_len = 0;
                 str_len = SSL_read(tmp->ssl, buff, sizeof(buff));
                 printf("sock: %d ", tmp->fd);
-                printf_buff("read", buff, str_len);
+                // printf_buff("read", buff, str_len);
                 if(str_len > 0)
                 {
                     while(str_len)
                     {
                         memmove(recv_buffer, buff + packet_len, str_len);
-                        printf_buff("recv_buffer", recv_buffer, str_len);
+                        // printf_buff("recv_buffer", recv_buffer, str_len);
 
                         int return_fd = event_handle(tmp , recv_buffer, &packet_len);
 

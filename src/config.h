@@ -7,10 +7,17 @@
 #define EPOLL_SIZE 128
 
 struct config{
+    // info
     int port;
     int tls;
     char key[256];
     char cert[256];
+
+    // log
+    int log;
+    char log_file[256];
+
+    // plug_in
     int is_anonymously;
     char control_type[64];
     char dir[256];
