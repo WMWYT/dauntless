@@ -6,6 +6,7 @@
 #include "session.h"
 #include "filtering.h"
 #include "mqtt_encode.h"
+#include "log.h"
 
 extern struct RootNode root;
 extern struct SYSNode sys;
@@ -218,7 +219,7 @@ void session_unsubscribe_topic(char *s_topic, struct session *s)
     utarray_sort(s->topic, strsort);
 }
 
-void session_printf_all()
+void session_print_all()
 {
     struct session *current;
     struct session *tmp;
@@ -226,16 +227,16 @@ void session_printf_all()
 
     HASH_ITER(hh1, session_sock, current, tmp)
     {
-        printf("sock %d: %s\n", current->sock, current->client_id);
+        log_debug("sock %d: %s", current->sock, current->client_id);
+
         if(current->connect_info->user_name)
-            printf(" user_name: %s\nsubscribe topic -- ", current->connect_info->user_name->string);
+            log_debug("user_name: %s", current->connect_info->user_name->string);
 
         if(current->connect_info->will_topic)
-            printf("will topic -- %s payload -- %s\n", current->connect_info->will_topic->string, current->connect_info->will_payload->string);
+            log_debug("will topic -- %s will payload -- %s", current->connect_info->will_topic->string, current->connect_info->will_payload->string);
 
         while ((p = (char **)utarray_next(current->topic, p)))
-            printf("%s ", *p);
-        printf("\n");
+            log_debug("subscribe topic:%s ", *p);
     }
 }
 
@@ -358,26 +359,26 @@ UT_array *session_topic_search(char *topic)
     return NULL;
 }
 
-void session_topic_printf_all()
+void session_topic_print_all()
 {
     ChilderNode *p = NULL;
-    printf("-------------------system-------------\n");
-    printf("+\n");
+    log_debug("-------------------system-------------");
+    log_debug("+");
 
     free(p);
     p = NULL;
 
     if (sys.plus_children != NULL)
     {
-        printf_all(sys.plus_children);
+        print_all(sys.plus_children);
     }
 
-    printf("\nnormal\n");
+    log_debug("normal");
 
-    printf_all(sys.children);
+    print_all(sys.children);
 
-    printf("-------------------root-------------\n");
-    printf("#\n");
+    log_debug("-------------------root-------------");
+    log_debug("#");
     if (root.childer_node != NULL)
     {
         while ((p = (ChilderNode *)utarray_next(root.childer_node, p)))
@@ -387,21 +388,21 @@ void session_topic_printf_all()
         }
     }
 
-    printf("\n+\n");
+    log_debug("+");
 
     free(p);
     p = NULL;
 
     if (root.plus_children != NULL)
     {
-        printf_all(root.plus_children);
+        print_all(root.plus_children);
     }
 
-    printf("\nnormal\n");
+    log_debug("normal");
 
-    printf_all(root.children);
+    print_all(root.children);
 
-    printf("____________________________________\n");
+    log_debug("____________________________________");
 }
 
 /*****************sessiong publish*****************/
@@ -473,27 +474,25 @@ void session_publish_delete(int packet_id)
     utarray_free(session_packet_identifier[packet_id].payload);
 }
 
-void session_publish_printf()
+void session_publish_print()
 {
     int i = 0;
-    printf("-------------------------------------\n");
-    printf("session publish\n");
+    log_debug("session publish\n");
     publish_payload *p;
 
     for (i = 0; i < 65536; i++)
     {
         if (session_packet_identifier[i].client_id != NULL)
         {
-            printf("id:%d\n", i);
-            printf("client_id:%s\n", session_packet_identifier[i].client_id);
-            printf("topic:%s\n", session_packet_identifier[i].topic);
+            log_debug("id:%d", i);
+            log_debug("client_id:%s", session_packet_identifier[i].client_id);
+            log_debug("topic:%s", session_packet_identifier[i].topic);
             p = NULL;
             while ((p = (publish_payload *)utarray_next(session_packet_identifier[i].payload, p)))
             {
-                printf("payload:%s\n", p->payload);
-                printf("qos:%d\n", p->qos);
+                log_debug("payload:%s", p->payload);
+                log_debug("qos:%d", p->qos);
             }
         }
     }
-    printf("-------------------------------------\n");
 }

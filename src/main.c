@@ -30,9 +30,6 @@ int main(int argc, char * const argv[])
 
     printf_logo();
 
-    log_set_level(0);
-    log_set_quiet(0);
-
     config_init();  //初始化服务器配置
 
     while( (opt = getopt(argc, argv, "hpc:")) != -1 )
@@ -52,7 +49,7 @@ int main(int argc, char * const argv[])
                 exit(EXIT_SUCCESS);
         }
     }
-
+    
     if (config.is_anonymously)
     {
         if (dauntless_plugin_init(config.dir, config.control_type) < 0)
@@ -61,6 +58,9 @@ int main(int argc, char * const argv[])
             exit(EXIT_FAILURE);
         }
     }
+
+    log_set_level(config.log_level);
+    log_set_quiet(!config.log);
 
     if(config.log)
     {

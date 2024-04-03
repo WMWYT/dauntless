@@ -6,6 +6,8 @@
 #define BUFF_SIZE 128
 #define EPOLL_SIZE 128
 
+#define log_tcp_debug(info, buff, len) log_tcp(__FILE__, __LINE__, info, buff, len)
+
 struct config{
     // info
     int port;
@@ -15,6 +17,7 @@ struct config{
 
     // log
     int log;
+    int log_level;
     char log_file[256];
 
     // plug_in
@@ -23,6 +26,7 @@ struct config{
     char dir[256];
 };
 
+void log_tcp(const char *file, int line, char * info, unsigned char * buff, int len);
 void config_init();
 void config_file_load(char * file_dir);
 

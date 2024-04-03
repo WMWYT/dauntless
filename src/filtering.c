@@ -4,6 +4,7 @@
 #include <strings.h>
 #include <stdbool.h>
 #include "filtering.h"
+#include "log.h"
 
 struct RootNode root;
 struct SYSNode sys;
@@ -215,8 +216,6 @@ void intercept(char * key, int max_qos, char * client_id){
             tmp_str = (char *) malloc(sizeof(char) * (i - tmp_int + 2));
             memset(tmp_str, 0, sizeof(char) * (i - tmp_int + 2));
             strncpy(tmp_str, &key[tmp_int], i - tmp_int + 1);
-
-            //printf("tmp_str:%s\n", &key[tmp_int]);
 
             if(!strcmp(tmp_str, "#")){
                 goto pound;
@@ -517,7 +516,7 @@ void delete_all(struct TrieNode * node){
     HASH_CLEAR(hh, node);
 }
 
-void printf_all(struct TrieNode * s_root){
+void print_all(struct TrieNode * s_root){
     struct TrieNode *current_user, *tmp;
     ChilderNode *p1 = NULL;
     ChilderNode *p2 = NULL;
@@ -528,29 +527,28 @@ void printf_all(struct TrieNode * s_root){
 
     HASH_ITER(hh, s_root, current_user, tmp){
         if(current_user->childer_node != NULL){
-            printf("%s ", current_user->key);
+            log_debug("%s ", current_user->key);
             while((p1=(ChilderNode*) utarray_next(current_user->childer_node,p1))){
-                printf("client_id:%s ", p1->client_id);
-                printf("max_qos:%d ", p1->max_qos);
+                log_debug("client_id:%s ", p1->client_id);
+                log_debug("max_qos:%d ", p1->max_qos);
             }
         }else{
-            printf("%s ", current_user->key);
+            log_debug("%s ", current_user->key);
         }
 
         if(current_user->PoundNode.childer_node != NULL){
-            printf("\n---------------pound------------\n");
-            printf("%s ", current_user->key);
+            log_debug("---------------pound------------");
+            log_debug("%s ", current_user->key);
             while((p2=(ChilderNode *)utarray_next(current_user->PoundNode.childer_node, p2))){
-                printf("client_id:%s ", p2->client_id);
-                printf("max_qos:%d", p2->max_qos);
+                log_debug("client_id:%s ", p2->client_id);
+                log_debug("max_qos:%d", p2->max_qos);
             }
-            printf("\n");
         }
 
         if(current_user->plus_children != NULL){
-            printf_all(current_user->plus_children);
+            print_all(current_user->plus_children);
         }
 
-        printf_all(current_user->children);
+        print_all(current_user->children);
     }
 }

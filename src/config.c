@@ -33,18 +33,19 @@ void config_file_load(char *file_dir)
         strcpy(config.key, iniparser_getstring(ini, "info:key", "NULL"));
         if (!strcmp(config.key, "NULL"))
         {
-            printf("config error! tls key\n");
+            log_error("config error! tls key\n");
             exit(EXIT_FAILURE);
         }
 
         strcpy(config.cert, iniparser_getstring(ini, "info:cert", "NULL"));
         if (!strcmp(config.cert, "NULL"))
         {
-            printf("config error! tls cert\n");
+            log_error("config error! tls cert\n");
             exit(EXIT_FAILURE);
         }
     }
 
+    config.log_level = iniparser_getint(ini, "log:log_level", LOG_INFO);
     config.log = iniparser_getboolean(ini, "log:log", 0);
     if(config.log)
     {
@@ -63,17 +64,31 @@ void config_file_load(char *file_dir)
         strcpy(config.control_type, iniparser_getstring(ini, "login:control_type", "NULL"));
         if (!strcmp(config.control_type, "NULL"))
         {
-            printf("config error! you not have set [control_type].\n");
+            log_error("config error! you not have set [control_type].\n");
             exit(EXIT_FAILURE);
         }
 
         strcpy(config.dir, iniparser_getstring(ini, "control:dir", "NULL"));
         if (!strcmp(config.dir, "NULL"))
         {
-            printf("config error! you not have set [dir].\n");
+            log_error("config error! you not have set [dir].\n");
             exit(EXIT_FAILURE);
         }
     }
 
     iniparser_freedict(ini);
+}
+
+void log_tcp(const char *file, int line, char * info, unsigned char * buff, int len)
+{
+    int i, j;
+    char hex[65535] = {0};
+
+    for (i = 0, j = 0; i < len; i++)
+    {        
+        sprintf(&hex[j], "%02X ", *(buff++));
+        j += 3;
+    }
+
+    log_log(LOG_DEBUG, file, line, "%s: %s", info, hex);
 }

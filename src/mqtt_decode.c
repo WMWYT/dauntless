@@ -4,6 +4,8 @@
 #include <time.h>
 #include "mqtt_decode.h"
 #include "dauntless_mqtt.h"
+#include "log.h"
+#include "config.h"
 
 int string_len(unsigned char * buff){
     int i = 1;
@@ -60,7 +62,7 @@ struct connect_packet *mqtt_connect_packet_create(struct fixed_header header, un
     packet->variable_header.protocol_name = hex_to_string(buff);
 
     if(strcmp(packet->variable_header.protocol_name->string, "MQTT")){
-        printf("error not mqtt packet\n");
+        log_error("error not mqtt packet\n");
         return NULL;
     }
 
@@ -301,7 +303,7 @@ union mqtt_packet * mqtt_pack_decode(unsigned char * buff, int * packet_len)
         memset(packet_buff, 0, sizeof(unsigned char) * (value + 2));
         memmove(packet_buff, ++buff, value);
 
-        // printf_buff("packet_buff", buff, value);
+        log_tcp_debug("packet_buff", buff, value);
     }
 
     switch (header.control_packet_1){

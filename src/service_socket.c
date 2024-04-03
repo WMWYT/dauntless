@@ -57,13 +57,11 @@ void server_socket_ultimately()
 
 void socket_close(int fd)
 {
-    printf("-----------------\n");
-    session_printf_all();
-    session_topic_printf_all();
-    printf("-----------------\n");
+    session_print_all();
+    session_topic_print_all();
     epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
     close(fd);
-    printf("close socke %d\n", fd);
+    log_info("close socket %d", fd);
 }
 
 int server_socket_loop(int server_sock)
@@ -111,14 +109,15 @@ int server_socket_loop(int server_sock)
             {
                 int packet_len = 0;
                 str_len = read(ep_events[i].data.fd, buff, BUFF_SIZE);
-                printf("sock: %d ", ep_events[i].data.fd);
-                // printf_buff("read", buff, str_len);
+                
+                log_tcp_debug("tcp packet", buff, str_len);
+
                 if(str_len > 0)
                 {
                     while(str_len)
                     {
                         memmove(recv_buffer, buff + packet_len, str_len);
-                        // printf_buff("recv_buffer", recv_buffer, str_len);
+                        log_tcp_debug("recv buff", recv_buffer, str_len);
 
                         SocketData data;
 
@@ -140,10 +139,8 @@ int server_socket_loop(int server_sock)
 
                         str_len -= packet_len;
 
-                        printf("-----------------\n");
-                        session_printf_all();
-                        session_topic_printf_all();
-                        printf("-----------------\n");
+                        session_print_all();
+                        session_topic_print_all();
                     }
                 }
                 else

@@ -3,6 +3,8 @@
 #include <string.h>
 #include "mqtt_encode.h"
 #include "dauntless_mqtt.h"
+#include "config.h"
+#include "log.h"
 
 void ML_encode(int x, unsigned char * MSB, unsigned char * LSB){
     int encoded_byte = 0;
@@ -27,14 +29,14 @@ mqtt_string * string_encode(char * buff){
     memset(string, 0, sizeof(mqtt_string));
 
     if(buff == NULL){
-        printf("error string len (NULL)\n");
+        log_error("error string len (NULL)\n");
         return string;
     }
     
     int x = strlen(buff);
 
     if(x > (128 * 128)){
-        printf("error string len (more)\n");
+        log_error("error string len (more)\n");
         return string;
     }
 
@@ -118,7 +120,7 @@ char * conncet_packet_to_hex(struct connect_packet packet){
         buff += packet.payload.password->string_len;
     }
 
-    // printf_buff("connect packet", flag, packet.connect_header.remaining_length + 2);
+    log_tcp_debug("connect packet", flag, packet.connect_header.remaining_length + 2);
 
     return flag;
 }
@@ -200,7 +202,7 @@ char * publish_packet_to_hex(struct publish_packet packet){
 
     buff += packet.variable_header.topic_name->string_len;
 
-    printf("publish_packet_to_hex: %d\n", packet.qos);
+    log_debug("publish_packet_to_hex: %d", packet.qos);
 
     if(packet.qos > 0){
         *buff++ = packet.variable_header.identifier_MSB;
@@ -284,7 +286,7 @@ char * subscribe_packet_to_hex(struct subscribe_packet packet){
         *buff++ = packet.payload[i].qos;
     }
 
-    // printf_buff("flag", flag, packet.subscribe_header.remaining_length + 2);
+    log_tcp_debug("flag", flag, packet.subscribe_header.remaining_length + 2);
 
     return flag;
 }
@@ -325,7 +327,7 @@ char * suback_packet_to_hex(struct suback_packet packet){
         buff[i + 4] = packet.return_codes[i];
     }
 
-    // printf_buff("suback_packet", buff, packet.suback_header.remaining_length + 2);
+    log_tcp_debug("suback_packet", buff, packet.suback_header.remaining_length + 2);
 
     return buff;
 }
@@ -342,7 +344,7 @@ char * mqtt_suback_encode(int i_M, int i_L, int topic_size, int * return_code){
     packet.return_codes = return_code;
 
     for(int i = 0; i < topic_size; i++){
-        printf("mqtt_suback_encode: %d\n", packet.return_codes[i]);
+        log_debug("mqtt_suback_encode: %d", packet.return_codes[i]);
     }
 
     packet.return_code_size = topic_size;

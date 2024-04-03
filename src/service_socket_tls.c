@@ -13,10 +13,9 @@ extern struct session *session_sock;
 
 void socket_tls_close(SocketData **pps)
 {
-    // printf("-----------------\n");
-    // session_printf_all();
-    // session_topic_printf_all();
-    // printf("-----------------\n");
+    session_print_all();
+    session_topic_print_all();
+ 
     if (*pps == NULL)
     {
         return;
@@ -162,13 +161,16 @@ void server_socket_tls_loop(SocketData *server_socket)
                 int packet_len = 0;
                 str_len = SSL_read(tmp->ssl, buff, sizeof(buff));
                 printf("sock: %d ", tmp->fd);
-                // printf_buff("read", buff, str_len);
+
+                log_tcp_debug("read", buff, str_len);
+
                 if(str_len > 0)
                 {
                     while(str_len)
                     {
                         memmove(recv_buffer, buff + packet_len, str_len);
-                        // printf_buff("recv_buffer", recv_buffer, str_len);
+                        
+                        log_tcp_debug("recv_buff", recv_buffer, str_len);
 
                         int return_fd = event_handle(tmp , recv_buffer, &packet_len);
 
@@ -186,10 +188,9 @@ void server_socket_tls_loop(SocketData *server_socket)
                         }
                         
                         str_len -= packet_len;
-                        // printf("-----------------\n");
-                        // session_printf_all();
-                        // session_topic_printf_all();
-                        // printf("-----------------\n");
+
+                        session_print_all();
+                        session_topic_print_all();
                     }
                 }
                 else

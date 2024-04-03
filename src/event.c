@@ -7,6 +7,7 @@
 #include <sys/epoll.h>
 #include "dauntless_mqtt.h"
 #include "config.h"
+#include "log.h"
 #include "filtering.h"
 #include "session.h"
 #include "service.h"
@@ -50,7 +51,7 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
 
     if (mqtt_packet->connect->connect_header.control_packet_1 == CONNECT)
     {
-        printf("packet connect\n");
+        log_debug("packet connect");
         int error_code = mqtt_packet->connect->error_code;
 
         if (config.is_anonymously && error_code == CONNECT_ACCEPTED)
@@ -67,7 +68,6 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
 
             if (mqtt_packet->connect->payload.client_id != NULL && !(mqtt_packet->connect->variable_header.connect_flags >> 1 & 1))
             {
-                printf("clean session in\n");
                 for (int i = 1; i < 65536; i++)
                 {
                     if (session_packet_identifier[i].client_id != NULL)
@@ -130,7 +130,7 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
 
     if (mqtt_packet->publish->publish_header.control_packet_1 == PUBLISH)
     {
-        printf("packet publish\n");
+        log_debug("packet publish");
         struct session * publish_client;
         UT_array *publish_client_id;
         ChilderNode *p = NULL;
@@ -202,7 +202,7 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
     // QOS1
     if (mqtt_packet->const_packet->const_header.control_packet_1 == PUBACK)
     {
-        printf("puback packet\n");
+        log_debug("puback packet");
         unsigned char buff[2] = {0};
         buff[0] = mqtt_packet->const_packet->variable_header.byte1;
         buff[1] = mqtt_packet->const_packet->variable_header.byte2;
@@ -212,15 +212,14 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
     // QOS2
     if (mqtt_packet->const_packet->const_header.control_packet_1 == PUBREL)
     {
-        printf("pubrel packet\n");
-        session_publish_printf();
+        log_debug("pubrel packet");
+        session_publish_print();
         send_infomation(data, mqtt_publish_qos_encode(PUBCOMP, 0, mqtt_packet->const_packet->variable_header.byte1, mqtt_packet->const_packet->variable_header.byte2), 4);
     }
 
     if (mqtt_packet->const_packet->const_header.control_packet_1 == PUBREC)
     {
-        printf("pubrec packet\n");
-
+        log_debug("pubrec packet");
         unsigned char buff[2] = {0};
         buff[0] = mqtt_packet->const_packet->variable_header.byte1;
         buff[1] = mqtt_packet->const_packet->variable_header.byte2;
@@ -231,13 +230,13 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
 
     if (mqtt_packet->const_packet->const_header.control_packet_1 == PUBCOMP)
     {
-        printf("pubcomp packet\n");
+        log_debug("pubcomp packet");
         // TODO 丢弃状态
     }
 
     if (mqtt_packet->subscribe->subscribe_header.control_packet_1 == SUBSCRIBE)
     {
-        printf("packet subscribe\n");
+        log_debug("subscribe packet");
         int *return_code = (int *)malloc(sizeof(int) * (mqtt_packet->subscribe->topic_size + 1));
         memset(return_code, 0, sizeof(return_code));
 
@@ -271,7 +270,7 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
 
     if (mqtt_packet->unsubscribe->unsubscribe_header.control_packet_1 == UNSUBSCRIBE)
     {
-        printf("packet unsubscribe\n");
+        log_debug("unsubscribe packet");
         for (int i = 0; i < mqtt_packet->unsubscribe->un_topic_size; i++)
         {
             session_unsubscribe_topic(mqtt_packet->unsubscribe->payload[i]->string, s);
@@ -283,11 +282,13 @@ int event_handle(SocketData *data, char *buff, int *packet_len)
 
     if (mqtt_packet->pingreq->pingreq_header.control_packet_1 == PINGREQ)
     {
+        log_debug("pingreq packet");
         send_infomation(data, mqtt_pingresp_encode(), 2);
     }
 
     if (mqtt_packet->disconnect->disconnect_header.control_packet_1 == DISCONNECT)
     {
+        log_debug("disconnect packet");
         session_close(s);
 
         return -1; // 小于0 客户端断开链接， 要断开链接不发送

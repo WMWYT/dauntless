@@ -41,6 +41,6 @@ void intercept(char * key, int max_qos, char * client_id);
 UT_array * search(char * key);
 void delete_topic(char * key, char * client_id);
 void delete_all(struct TrieNode * node);
-void printf_all(struct TrieNode * s_root);
+void print_all(struct TrieNode * s_root);
 
 #endif
