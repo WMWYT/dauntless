@@ -28,7 +28,7 @@ sudo make install
 设置之后就可以启动dauntless。
 
 ```bash
-dauntless
+dauntless -c /usr/local/etc/dauntless/dauntless.ini
 ```
 
 默认端口为1883，启动前确保端口未被占用。
@@ -39,7 +39,5 @@ dauntless
 
 ## TODO
 
-* dauntless_client
 * 添加线程
-* 打包
 * ctest测试
